@@ -194,6 +194,3 @@ class Main(object):
                 if err: cmds.undo()
         else:
             cmds.confirmDialog(t="Oh no...", m="Frame rate could not be determined. :s")
-
-
-m = Main()
