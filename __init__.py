@@ -19,8 +19,17 @@
 from __future__ import division
 
 import time
+import itertools
 import clicktime.selection as selection
 import maya.cmds as cmds
+
+def shift(iterable, size):
+    """ iterate in groups ie [1,2,3] [2,3,4] """
+    i = itertools.tee(iterable, size)
+    for a, b in enumerate(i):
+        for c in range(a):
+            b.next()
+    return itertools.izip(*i)
 
 class Main(object):
     """ Time out animations by clicking your mouse """
@@ -139,10 +148,26 @@ class Main(object):
         framerate = { 'game': 15, 'film': 24, 'pal': 25, 'ntsc': 30, 'show': 48, 'palf': 50, 'ntscf': 60, 'hour': 60, 'min': 60, 'sec': 60, 'millisec': 100 }
         rate = framerate.get(cmds.currentUnit(q=True, t=True))
         if rate:
-            start = pose_times[0]
-            print s.poses
+            err = cmds.undoInfo(openChunk=True)
+            try:
+                start_time = pose_times[0] # Our start points
+                start_frame = poses[0]
+                offset = (int(((b - start_time) * rate) + a) for a, b in zip(poses, pose_times))
+                new_frames = []
+                for i, o in enumerate(offset): # Ensure we don't have doubleups if frames are too close together
+                    if i:
+                        i -= 1
+                        if new_frames[i] == o: # If previous frame is the same, bump us forward a frame
+                            o += 1
+                    new_frames.append(o)
 
-            pass
+                print new_frames
+                pass
+            except Exception as err:
+                raise
+            finally:
+                cmds.undoInfo(closeChunk=True)
+                if err: cmds.undo()
         else:
             cmds.confirmDialog(t="Oh no...", m="Frame rate could not be determined. :s")
 
