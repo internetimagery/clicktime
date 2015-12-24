@@ -19,8 +19,9 @@
 from __future__ import division
 
 import time
+import report
 import itertools
-import clicktime.selection as selection
+import selection
 import maya.cmds as cmds
 
 def shift(iterable, size):
@@ -34,29 +35,30 @@ def shift(iterable, size):
 class Main(object):
     """ Time out animations by clicking your mouse """
     def __init__(s):
-        name = "clicktime_gui"
-        s.selection = {}
-        s.times = []
-        s.dry_run = False
-        s._curve_monitor = []
-        s._selection_monitor = cmds.ls(sl=True, type="transform")
-        s.active = False
+        with report.Report():
+            name = "clicktime_gui"
+            s.selection = {}
+            s.times = []
+            s.dry_run = False
+            s._curve_monitor = []
+            s._selection_monitor = cmds.ls(sl=True, type="transform")
+            s.active = False
 
-        if cmds.window(name, q=True, ex=True):
-            cmds.deleteUI(name)
+            if cmds.window(name, q=True, ex=True):
+                cmds.deleteUI(name)
 
-        s.win = win = cmds.window(name, t="Click Timing", w=200, rtf=True)
-        cmds.columnLayout(adj=True)
-        cmds.button(h=20, l="Key Pose", c=s.key_full_pose)
-        cmds.button(h=20, l="Load Poses", c=s.load_poses)
-        s.move_slider = cmds.checkBox(h=20, l="Move Timeslider", v=True)
+            s.win = win = cmds.window(name, t="Click Timing", w=200, rtf=True)
+            cmds.columnLayout(adj=True)
+            cmds.button(h=20, l="Key Pose", c=s.key_full_pose)
+            cmds.button(h=20, l="Load Poses", c=s.load_poses)
+            s.move_slider = cmds.checkBox(h=20, l="Move Timeslider", v=True)
 
-        s.message = cmds.text(h=30, l="Hello!")
+            s.message = cmds.text(h=30, l="Hello!")
 
-        s.go_btn = cmds.button(h=100, en=False, l="BIG ASS BUTTON", c=s.start_timing)
-        cmds.showWindow(win)
-        s.reset_gui()
-        cmds.scriptJob(e=("SelectionChanged", s.monitor_selection_changes), p=win)
+            s.go_btn = cmds.button(h=100, en=False, l="BIG ASS BUTTON", c=s.start_timing)
+            cmds.showWindow(win)
+            s.reset_gui()
+            cmds.scriptJob(e=("SelectionChanged", s.monitor_selection_changes), p=win)
 
     def reset_gui(s):
         """ Reset GUI """
@@ -64,6 +66,7 @@ class Main(object):
         cmds.text(s.message, e=True, l="Load in some poses.")
         s.active = False
 
+    @report.Report()
     def load_poses(s, *from_button):
         """ Load up poses. ie: Moments in time with a key on each frame. """
         s.update_selection()
@@ -118,6 +121,7 @@ class Main(object):
             cmds.setKeyframe(curves, i=True)
             s.reset_gui()
 
+    @report.Report()
     def start_timing(s, *_):
         """ Begin timing """
         if s.poses:
@@ -125,6 +129,7 @@ class Main(object):
             next(coroutine)
             cmds.button(s.go_btn, e=True, c=lambda x: coroutine.send(time.time()))
 
+    @report.Report()
     def record_timing(s, move_timeslider):
         """ Record our timing """
         poses = s.poses
