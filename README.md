@@ -11,7 +11,7 @@ Simply copy the folder into your scripts directory in Maya. The folder should be
 Within Maya, create a shelf icon with the following PYTHON code:
 
 	import clicktime
-	clicktime.GUI()
+	clicktime.Main()
 
 Clicktime defines "Poses" as moments in time that have a keyframe on every animated channel, on every object you have selected. If you have missed out on a key by mistake and just can't seem to get it to register a pose. You can go to that frame and click the button "Key Pose" to key every channel at that time.
 
