@@ -159,10 +159,31 @@ class Main(object):
                         i -= 1
                         if new_frames[i] == o: # If previous frame is the same, bump us forward a frame
                             o += 1
-                    new_frames.append(o)
+                        new_frames.append(o)
+                    else:
+                        new_frames.append(start_frame)
 
-                print new_frames
-                pass
+                curves = s.selection.keys()
+                last_frame = cmds.findKeyframe(curves, which="last")
+
+                for (f1, f2), (f3, f4) in itertools.izip(shift(poses, 2), shift(new_frames, 2)):
+                    old_gap = f2 - f1 # Gap between frames
+                    new_gap = f4 - f3
+                    end_gap = last_frame - f3
+
+                    scale = (1 / old_gap) if old_gap else 0 # Scale ammount
+                    movement = new_gap * scale
+
+                    cmds.scaleKey(curves, iub=True, t=(f3, last_frame), ts=movement, tp=f3)
+
+                    new_end = end_gap * movement + f3 # Where has our end, ended up?
+                    new_gap = new_end - f4
+                    new_end_scale = (1 / new_gap) if new_gap else 0
+                    last_frame = (f4 - (old_gap + f3)) + last_frame # Move last frame out a bit
+                    return_move = (last_frame - f4) * new_end_scale
+
+                    cmds.scaleKey(curves, iub=True, t=(f4, new_end), ts=return_move, tp=f4)
+
             except Exception as err:
                 raise
             finally:
@@ -170,22 +191,6 @@ class Main(object):
                 if err: cmds.undo()
         else:
             cmds.confirmDialog(t="Oh no...", m="Frame rate could not be determined. :s")
-
-
-
-    #             start = self.timestore[0]
-    #             self.newtime = []
-    #             for i in range(len(self.timestore)):
-    #                 self.timestore[i] = float( int( (self.timestore[i] - start) * rate ) )
-    #                 if i:
-    #                     if self.timestore[i] == self.timestore[(i-1)]: #fix duplicate frames
-    #                         self.timestore[i] = self.timestore[i]+0.5
-    #                     if self.timestore[i] < self.timestore[(i-1)]: #fix backward frames
-    #                         self.timestore[i] = ((self.timestore[(i-1)] - self.timestore[i]) +0.5) + self.timestore[i]
-    #                 self.newtime.append( self.timestore[i] + self.basetime[0] )
-    #             if self.snapshot:
-    #                 cmds.currentTime( self.basetime[0] )
-    #             self.retime()
 
 
 m = Main()
