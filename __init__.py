@@ -152,7 +152,8 @@ class Main(object):
             try:
                 start_time = pose_times[0] # Our start points
                 start_frame = poses[0]
-                offset = (int(((b - start_time) * rate) + a) for a, b in zip(poses, pose_times))
+                offset = (int(((a - start_time) * rate) + start_frame) for a in pose_times)
+
                 new_frames = []
                 for i, o in enumerate(offset): # Ensure we don't have doubleups if frames are too close together
                     if i:
@@ -183,6 +184,8 @@ class Main(object):
                     return_move = (last_frame - f4) * new_end_scale
 
                     cmds.scaleKey(curves, iub=True, t=(f4, new_end), ts=return_move, tp=f4)
+
+                    print "Moved %s to %s" % (f2, f4)
 
             except Exception as err:
                 raise
