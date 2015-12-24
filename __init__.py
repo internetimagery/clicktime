@@ -40,6 +40,7 @@ class Main(object):
         cmds.columnLayout(adj=True)
         cmds.button(h=20, l="Key Pose", c=s.key_full_pose)
         cmds.button(h=20, l="Load Poses", c=s.load_poses)
+        s.move_slider = cmds.checkBox(h=20, l="Move Timeslider", v=True)
 
         s.message = cmds.text(h=30, l="Hello!")
 
@@ -111,22 +112,25 @@ class Main(object):
     def start_timing(s, *_):
         """ Begin timing """
         if s.poses:
-            coroutine = s.record_timing(False)
+            coroutine = s.record_timing(cmds.checkBox(s.move_slider, q=True, v=True))
             next(coroutine)
             cmds.button(s.go_btn, e=True, c=lambda x: coroutine.send(time.time()))
 
     def record_timing(s, move_timeslider):
         """ Record our timing """
+        poses = s.poses
         pose_times = []
-        num_poses = len(s.poses)
+        num_poses = len(poses)
         step = 100 / num_poses - 1
         message = "Timing in progress...\n[%s]"
-        for i in range(1, num_poses):
+        for i, curr in enumerate(poses):
             progress = (":"* int(i * step)).ljust(100, ".")
             cmds.text(s.message, e=True, l=message % progress)
             cmds.button(s.go_btn, e=True, l="%s poses left..." % (num_poses - i))
+            if move_timeslider: cmds.currentTime(curr)
             t = (yield) # Time
             pose_times.append(t)
+        if move_timeslider: cmds.currentTime(poses[0])
 
         cmds.button(s.go_btn, e=True, c=s.start_timing)
         s.reset_gui()
@@ -136,7 +140,7 @@ class Main(object):
         rate = framerate.get(cmds.currentUnit(q=True, t=True))
         if rate:
             start = pose_times[0]
-
+            print s.poses
 
             pass
         else:
